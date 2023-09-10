@@ -68,10 +68,20 @@ type AuthResult = {
 type BearerData = {
   access_token: string;
   token_type: string;
+  refresh_token: string;
+  expires_in: number;
 };
 
 function App(): JSX.Element {
-  const [bearerToken, setBearerToken] = useState<string>('');
+  const [bearerToken, setBearerToken] = useState<{
+    token: string;
+    refreshToken: string;
+    expiresIn: number;
+  }>({
+    token: '',
+    refreshToken: '',
+    expiresIn: 0,
+  });
   console.log('App started');
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -82,32 +92,70 @@ function App(): JSX.Element {
   const SCOPES: string =
     'domains:read_write linodes:read_write volumes:read_write';
 
-  async function saveTokenToKeychain(token: string): Promise<void> {
-    console.log('Attempting to save token to keychain...');
+  async function saveTokenToKeychain(
+    token: string,
+    refreshToken: string,
+    expiresIn: number,
+  ): Promise<void> {
     try {
-      await Keychain.setGenericPassword('bearerToken', token, {
-        // accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED
-      });
-      console.log('Token saved to keychain successfully');
+      await Keychain.setGenericPassword(
+        'bearerToken',
+        JSON.stringify({token, refreshToken, expiresIn}),
+      );
+      setBearerToken({token, refreshToken, expiresIn});
+      console.log('Token details saved to keychain');
     } catch (error) {
-      console.error('Failed to save token to keychain:', error);
+      console.error('Failed to save token details to keychain:', error);
     }
   }
 
-  async function getTokenFromKeychain(): Promise<string | null> {
-    console.log('Attempting to retrieve token from keychain...');
+  async function getTokenDetailsFromKeychain(): Promise<{
+    token: string;
+    refreshToken: string;
+    expiresIn: number;
+  } | null> {
     try {
       const credentials = await Keychain.getGenericPassword();
       if (credentials) {
-        console.log('Token retrieved from keychain:', credentials.password);
-        return credentials.password;
-      } else {
-        console.log('No token found in keychain');
+        return JSON.parse(credentials.password);
       }
     } catch (error) {
-      console.error('Failed to get token from keychain:', error);
+      console.error('Failed to get token details from keychain:', error);
     }
     return null;
+  }
+
+  async function refreshTokenDetails(refreshToken: string): Promise<void> {
+    const response = await fetch(
+      'https://akaview-oauth.stenstromen.workers.dev/refresh',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `grant_type=refresh_token&client_id=a19ae26298d859431efe&refresh_token=${refreshToken}`,
+      },
+    );
+
+    if (response.ok) {
+      const data: BearerData = await response.json();
+      const token = data.token_type + ' ' + data.access_token;
+      const newRefreshToken = data.refresh_token;
+      const expiresIn = Date.now() + data.expires_in * 1000; // Convert expiresIn to a future timestamp
+      await saveTokenToKeychain(token, newRefreshToken, expiresIn);
+    } else {
+      throw new Error('Failed to refresh token');
+    }
+  }
+
+  async function checkAndRefreshToken() {
+    const tokenDetails = await getTokenDetailsFromKeychain();
+    if (tokenDetails) {
+      if (Date.now() >= tokenDetails.expiresIn) {
+        // Token is expired or about to expire soon, refresh it
+        await refreshTokenDetails(tokenDetails.refreshToken);
+      }
+    }
   }
 
   async function openInAppBrowser(): Promise<void> {
@@ -163,12 +211,25 @@ function App(): JSX.Element {
 
     if (response.ok) {
       const data: BearerData = await response.json();
-      const token = data.token_type + ' ' + data.access_token;
-      setBearerToken(token);
+      const token =
+        data.token_type +
+        ' ' +
+        data.access_token +
+        data.refresh_token +
+        data.expires_in;
+      setBearerToken({
+        token: token,
+        refreshToken: data.refresh_token,
+        expiresIn: Date.now() + data.expires_in * 1000,
+      });
 
       // Save token to keychain
-      await saveTokenToKeychain(token);
-      console.log(data);
+      /* await saveTokenToKeychain(
+        token,
+        data.refresh_token,
+        Date.now() + data.expires_in * 1000,
+      );
+      console.log(data); */
     } else {
       throw new Error('Failed to fetch bearer token');
     }
@@ -190,18 +251,28 @@ function App(): JSX.Element {
 
     const accessToken: string | undefined = params.access_token;
     const tokenType: string | undefined = params.token_type;
+    const refreshToken: string | undefined = params.refresh_token;
+    const expiresIn: number = Number(params.expires_in) || 0;
 
     if (accessToken && tokenType) {
       // Do something with the token data (e.g., set state or store it)
-      setBearerToken(tokenType + ' ' + accessToken);
-      console.log(accessToken, tokenType);
-      saveTokenToKeychain(tokenType + ' ' + accessToken);
+      setBearerToken({
+        token: tokenType + ' ' + accessToken,
+        refreshToken: refreshToken || '',
+        expiresIn: expiresIn,
+      });
+      console.log(accessToken, tokenType, refreshToken, expiresIn);
+      saveTokenToKeychain(
+        tokenType + ' ' + accessToken,
+        refreshToken,
+        expiresIn,
+      );
     }
   };
 
   useEffect(() => {
     const loadTokenFromKeychain = async () => {
-      const token = await getTokenFromKeychain();
+      const token = await getTokenDetailsFromKeychain();
       if (token) {
         setBearerToken(token);
       }
@@ -257,7 +328,13 @@ function App(): JSX.Element {
           }}>
           <Button title="Login with Linode" onPress={openInAppBrowser} />
           <Section title="Bearer Token">
-            <Text>{bearerToken}</Text>
+            <Text>
+              {bearerToken.token +
+                '-' +
+                bearerToken.expiresIn +
+                '-' +
+                bearerToken.refreshToken}
+            </Text>
           </Section>
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this

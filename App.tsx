@@ -23,8 +23,6 @@ import {
 import {
   Colors,
   DebugInstructions,
-  Header,
-  LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
@@ -90,7 +88,7 @@ function App(): JSX.Element {
   };
 
   const SCOPES: string =
-    'domains:read_write linodes:read_write volumes:read_write';
+    'linodes:read_only volumes:read_only nodebalancers:read_only firewall:read_only images:read_only';
 
   async function saveTokenToKeychain(
     token: string,
@@ -139,7 +137,11 @@ function App(): JSX.Element {
 
     if (response.ok) {
       const data: BearerData = await response.json();
-      const token = data.token_type + ' ' + data.access_token;
+      const token =
+        data.token_type.charAt(0).toUpperCase() +
+        data.token_type.slice(1) +
+        ' ' +
+        data.access_token;
       const newRefreshToken = data.refresh_token;
       const expiresIn = Date.now() + data.expires_in * 1000; // Convert expiresIn to a future timestamp
       await saveTokenToKeychain(token, newRefreshToken, expiresIn);
@@ -212,7 +214,8 @@ function App(): JSX.Element {
     if (response.ok) {
       const data: BearerData = await response.json();
       const token =
-        data.token_type +
+        data.token_type.charAt(0).toUpperCase() +
+        data.token_type.slice(1) +
         ' ' +
         data.access_token +
         data.refresh_token +
@@ -256,14 +259,15 @@ function App(): JSX.Element {
 
     if (accessToken && tokenType) {
       // Do something with the token data (e.g., set state or store it)
+      const formattedTokenType =
+        tokenType.charAt(0).toUpperCase() + tokenType.slice(1);
       setBearerToken({
-        token: tokenType + ' ' + accessToken,
+        token: formattedTokenType + ' ' + accessToken,
         refreshToken: refreshToken || '',
         expiresIn: expiresIn,
       });
-      console.log(accessToken, tokenType, refreshToken, expiresIn);
       saveTokenToKeychain(
-        tokenType + ' ' + accessToken,
+        formattedTokenType + ' ' + accessToken,
         refreshToken,
         expiresIn,
       );
@@ -312,6 +316,19 @@ function App(): JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const getInstances = async () => {
+    await checkAndRefreshToken();
+    console.log(bearerToken.token);
+    const response = await fetch('https://api.linode.com/v4/linode/instances', {
+      method: 'GET',
+      headers: {
+        Authorization: bearerToken.token,
+      },
+    });
+    const data = await response.json();
+    console.log(data);
+  };
+
   return (
     <>
       <StatusBar
@@ -321,12 +338,12 @@ function App(): JSX.Element {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
-        <Header />
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
           <Button title="Login with Linode" onPress={openInAppBrowser} />
+          <Button title="Get Instances" onPress={getInstances} />
           <Section title="Bearer Token">
             <Text>
               {bearerToken.token +
@@ -349,7 +366,6 @@ function App(): JSX.Element {
           <Section title="Learn More">
             Read the docs to discover what to do next:
           </Section>
-          <LearnMoreLinks />
         </View>
       </ScrollView>
     </>

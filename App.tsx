@@ -1,16 +1,16 @@
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import DrawerNavigator from './Navigation/DrawerNavigator';
-import {DarkModeProvider} from './DarkModeContext';
+import {AppProvider} from './AppContext';
 import 'react-native-gesture-handler';
 
 function App() {
   return (
-    <DarkModeProvider>
+    <AppProvider>
       <NavigationContainer>
         <DrawerNavigator />
       </NavigationContainer>
-    </DarkModeProvider>
+    </AppProvider>
   );
 }
 

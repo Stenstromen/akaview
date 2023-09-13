@@ -1,13 +1,14 @@
 import React from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
-import {useDarkMode} from '../DarkModeContext';
+import {useApp} from '../AppContext';
 import MainScreen from './Screens/MainScreen';
+import Linodes from './Screens/Linodes';
 import SettingsScreen from './Screens/SettingsScreen';
 
 const Drawer = createDrawerNavigator();
 
 function DrawerNavigator(): JSX.Element {
-  const {isDarkMode} = useDarkMode();
+  const {isDarkMode} = useApp();
 
   return (
     <Drawer.Navigator
@@ -29,6 +30,11 @@ function DrawerNavigator(): JSX.Element {
         name="Main"
         component={MainScreen}
         options={{title: 'Main Screen'}}
+      />
+      <Drawer.Screen
+        name="Linodes"
+        component={Linodes}
+        options={{title: 'Linodes'}}
       />
       <Drawer.Screen
         name="Settings"

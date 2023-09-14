@@ -1,6 +1,12 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import {useApp} from '../../AppContext';
 import {getInstances} from '../../Api';
 
@@ -18,7 +24,12 @@ interface LinodeData {
   ipv6: string;
   label: string;
   region: string;
-  specs: object[];
+  specs: {
+    disk: number;
+    memory: number;
+    transfer: number;
+    vcpus: number;
+  };
   status: string;
   tags: string[];
   type: string;
@@ -34,8 +45,17 @@ interface LinodeResponse {
 }
 
 function Linodes(): JSX.Element {
+  const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
   const {isDarkMode, bearerToken} = useApp();
   const [instances, setInstances] = useState<LinodeResponse | null>(null);
+
+  const toggleAccordion = (id: number) => {
+    if (openAccordionId === id) {
+      setOpenAccordionId(null); // Close the accordion if it's currently open
+    } else {
+      setOpenAccordionId(id); // Open the accordion if it's currently closed
+    }
+  };
 
   useEffect(() => {
     const loadInstances = async () => {
@@ -51,44 +71,92 @@ function Linodes(): JSX.Element {
         styles.container,
         {backgroundColor: isDarkMode ? '#333' : '#fff'},
       ]}>
-      {instances?.data.map(instance => (
-        <View style={styles.card} key={instance.id}>
-          <View style={styles.cardMainContent}>
-            <Text
-              style={[styles.cardLabel, {color: isDarkMode ? '#fff' : '#000'}]}>
-              {instance.label}
-            </Text>
+      {instances?.data?.map(instance => (
+        <View key={instance.id}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => toggleAccordion(instance.id)}>
+            <View style={styles.cardMainContent}>
+              <Text
+                style={[
+                  styles.cardLabel,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                {instance.label}
+              </Text>
+              <Text
+                style={[
+                  styles.cardStatus,
+                  {color: instance.status === 'running' ? 'green' : 'red'},
+                ]}>
+                {instance.status}
+              </Text>
+              <Text
+                style={[
+                  styles.cardInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                Region: {instance.region}
+              </Text>
+              <Text
+                style={[
+                  styles.cardInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                Type: {instance.type}
+              </Text>
+            </View>
             <Text
               style={[
-                styles.cardStatus,
-                {color: instance.status === 'running' ? 'green' : 'red'},
+                styles.showDetailsText,
+                {color: isDarkMode ? '#fff' : '#000'},
               ]}>
-              {instance.status}
+              {openAccordionId === instance.id
+                ? 'Hide Details'
+                : 'Tap for Details'}
             </Text>
-            <Text
-              style={[styles.cardInfo, {color: isDarkMode ? '#fff' : '#000'}]}>
-              Region: {instance.region}
-            </Text>
-            <Text
-              style={[styles.cardInfo, {color: isDarkMode ? '#fff' : '#000'}]}>
-              Type: {instance.type}
-            </Text>
-          </View>
+          </TouchableOpacity>
 
-          <View style={styles.cardSecondaryContent}>
-            <Text
-              style={[styles.cardInfo, {color: isDarkMode ? '#fff' : '#000'}]}>
-              IPv4: {instance.ipv4.join(', ')}
-            </Text>
-            <Text
-              style={[styles.cardInfo, {color: isDarkMode ? '#fff' : '#000'}]}>
-              IPv6: {instance.ipv6}
-            </Text>
-            <Text
-              style={[styles.cardInfo, {color: isDarkMode ? '#fff' : '#000'}]}>
-              Created: {instance.created}
-            </Text>
-          </View>
+          {openAccordionId === instance.id && (
+            <View style={styles.accordionContent}>
+              <Text
+                style={[
+                  styles.sizingInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                {instance.specs.vcpus}x{instance.specs.memory / 1024}x
+                {instance.specs.disk / 1024}
+              </Text>
+              <Text
+                style={[
+                  styles.cardInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                IPv4: {instance.ipv4.join(', ')}
+              </Text>
+              <Text
+                style={[
+                  styles.cardInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                IPv6: {instance.ipv6}
+              </Text>
+              <Text
+                style={[
+                  styles.cardInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                Linode ID: {instance.id}
+              </Text>
+              <Text
+                style={[
+                  styles.cardInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                Created: {instance.created}
+              </Text>
+            </View>
+          )}
         </View>
       ))}
     </ScrollView>
@@ -101,10 +169,8 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   card: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     padding: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Slightly transparent white
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginBottom: 10,
     borderRadius: 5,
     shadowColor: '#000',
@@ -112,6 +178,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    position: 'relative',
   },
   cardMainContent: {
     flex: 1, // occupy as much space as available
@@ -133,6 +200,24 @@ const styles = StyleSheet.create({
   cardInfo: {
     fontSize: 14,
     marginBottom: 3,
+  },
+  sizingInfo: {
+    fontSize: 20,
+    marginBottom: 6,
+  },
+  showDetailsText: {
+    position: 'absolute',
+    bottom: 10, // Adjust as needed
+    right: 15, // Adjust as needed
+    fontSize: 14,
+  },
+  accordionContent: {
+    padding: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', // Even more transparent background for contrast
+    marginBottom: 10,
+    marginLeft: 10,
+    marginRight: 10,
+    borderRadius: 5,
   },
 });
 

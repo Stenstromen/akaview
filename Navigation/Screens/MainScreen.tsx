@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
@@ -6,56 +7,26 @@
  */
 
 import React, {useEffect} from 'react';
-import type {PropsWithChildren} from 'react';
 import * as Keychain from 'react-native-keychain';
 import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   View,
   Linking,
   AppState,
-  Button,
+  Image,
+  Text,
+  TouchableOpacity,
 } from 'react-native';
-
-import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 
 import {useApp} from '../../AppContext';
 import {SCOPES} from '../../Oauth';
-import {getInstances} from '../../Api';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): JSX.Element {
-  const {isDarkMode} = useApp();
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import srvon from '../../assets/srvon.png';
+import srvoff from '../../assets/srvoff.png';
+import {getUsername} from '../../Api';
 
 type AuthResult = {
   type: string;
@@ -69,13 +40,32 @@ type BearerData = {
   expires_in: number;
 };
 
+type IOSButtonProps = {
+  onPress: () => void;
+  title: string;
+};
+
+const IOSButton: React.FC<IOSButtonProps> = ({onPress, title}) => {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        backgroundColor: '#007AFF',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+      <Text style={{color: 'white', fontSize: 16}}>{title}</Text>
+    </TouchableOpacity>
+  );
+};
+
 function MainScreen(): JSX.Element {
   console.log('App started');
   const {isDarkMode, bearerToken, setBearerToken} = useApp();
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  const [username, setUsername] = React.useState<string | null>(null);
 
   async function saveTokenToKeychain(
     token: string,
@@ -225,33 +215,63 @@ function MainScreen(): JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const user = async () => {
+      const res = await getUsername(bearerToken);
+      setUsername(res.username);
+    };
+    user();
+  }, [bearerToken]);
+
   return (
     <>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
+        style={{flex: 1, backgroundColor: isDarkMode ? '#333' : '#fff'}}>
         <View
           style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
+            flex: 1,
+            backgroundColor: isDarkMode ? '#333' : '#fff',
+            justifyContent: 'space-between',
           }}>
-          <Button title="Login with Linode" onPress={openInAppBrowser} />
-          <Button
-            title="Get Instances"
-            onPress={() => getInstances(bearerToken)}
-          />
-          <Section title="Bearer Token">
-            <Text>
-              {bearerToken.token +
-                '-' +
-                bearerToken.expiresIn +
-                '-' +
-                bearerToken.refreshToken}
-            </Text>
-          </Section>
+          <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <Image
+              source={bearerToken.token ? srvon : srvoff}
+              style={{...styles.image, marginBottom: 20}}
+            />
+
+            {bearerToken.token && (
+              <Text style={{color: isDarkMode ? '#fff' : '#000', fontSize: 18}}>
+                Welcome {username}
+              </Text>
+            )}
+          </View>
+        </View>
+        <View
+          style={{
+            marginTop: 100,
+            width: '100%',
+            alignItems: 'center',
+          }}>
+          {!bearerToken.token && (
+            <IOSButton title="Login" onPress={openInAppBrowser} />
+          )}
+
+          {bearerToken.token && (
+            <IOSButton
+              title="Logout"
+              onPress={async () => {
+                await Keychain.resetGenericPassword();
+                setBearerToken({
+                  token: '',
+                  refreshToken: '',
+                  expiresIn: 0,
+                });
+              }}
+            />
+          )}
         </View>
       </ScrollView>
     </>
@@ -259,31 +279,11 @@ function MainScreen(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  webView: {
-    marginTop: 20,
-    width: '90%',
-    height: '70%',
+  image: {
+    width: 300,
+    height: 200,
+    marginTop: 40,
+    marginBottom: 140,
   },
 });
 

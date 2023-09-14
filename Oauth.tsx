@@ -8,7 +8,7 @@ type BearerData = {
 };
 
 export const SCOPES: string =
-  'linodes:read_only volumes:read_only nodebalancers:read_only firewall:read_only images:read_only';
+  'account:read_only linodes:read_only volumes:read_only nodebalancers:read_only firewall:read_only images:read_only';
 
 export const getTokenDetailsFromKeychain = async () => {
   try {

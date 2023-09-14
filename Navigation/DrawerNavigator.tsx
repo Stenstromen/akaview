@@ -3,12 +3,13 @@ import {createDrawerNavigator} from '@react-navigation/drawer';
 import {useApp} from '../AppContext';
 import MainScreen from './Screens/MainScreen';
 import Linodes from './Screens/Linodes';
+import NetworkScreen from './Screens/NetworkScreen';
 import SettingsScreen from './Screens/SettingsScreen';
 
 const Drawer = createDrawerNavigator();
 
 function DrawerNavigator(): JSX.Element {
-  const {isDarkMode} = useApp();
+  const {isDarkMode, bearerToken} = useApp();
 
   return (
     <Drawer.Navigator
@@ -24,17 +25,26 @@ function DrawerNavigator(): JSX.Element {
           color: isDarkMode ? '#fff' : '#000',
         },
         drawerActiveTintColor: isDarkMode ? '#47ba81' : '#1b804e',
+        swipeEdgeWidth: bearerToken.token ? 40 : 0,
       }}
       initialRouteName="Main">
       <Drawer.Screen
         name="Main"
         component={MainScreen}
-        options={{title: 'Main Screen'}}
+        options={{
+          title: 'AkaView',
+          headerLeft: bearerToken.token ? undefined : () => null,
+        }}
       />
       <Drawer.Screen
         name="Linodes"
         component={Linodes}
         options={{title: 'Linodes'}}
+      />
+      <Drawer.Screen
+        name="Network"
+        component={NetworkScreen}
+        options={{title: 'Network'}}
       />
       <Drawer.Screen
         name="Settings"

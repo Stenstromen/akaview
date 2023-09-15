@@ -1,14 +1,17 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState, useEffect} from 'react';
+import React, {useState, useCallback} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import {useApp} from '../../AppContext';
 import {getInstances} from '../../Api';
+import {useFocusEffect} from '@react-navigation/native';
 
 interface LinodeData {
   alerts: object[];
@@ -48,6 +51,7 @@ function Linodes(): JSX.Element {
   const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
   const {isDarkMode, bearerToken} = useApp();
   const [instances, setInstances] = useState<LinodeResponse | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const toggleAccordion = (id: number) => {
     if (openAccordionId === id) {
@@ -57,20 +61,33 @@ function Linodes(): JSX.Element {
     }
   };
 
-  useEffect(() => {
-    const loadInstances = async () => {
-      const instancess = await getInstances(bearerToken);
-      setInstances(instancess);
-    };
-    loadInstances();
-  }, [bearerToken]);
+  const loadInstances = async () => {
+    setRefreshing(true); // Start the refresh
+    const instancess = await getInstances(bearerToken);
+    setInstances(instancess);
+    setRefreshing(false); // End the refresh after data is fetched
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadInstances();
+
+      // Return function will run on component unmount
+      return () => {
+        // You can put any cleanup code here if needed
+      };
+    }, []),
+  );
 
   return (
     <ScrollView
       style={[
         styles.container,
         {backgroundColor: isDarkMode ? '#333' : '#fff'},
-      ]}>
+      ]}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={loadInstances} />
+      }>
       {instances?.data?.map(instance => (
         <View key={instance.id}>
           <TouchableOpacity

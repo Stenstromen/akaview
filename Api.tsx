@@ -39,6 +39,30 @@ export const getFirewalls = async (token: {
   return data;
 };
 
+export const getFirewall = async (
+  firewallid: string,
+  token: {
+    token: string;
+    refreshToken: string;
+    expiresIn: number;
+  },
+) => {
+  await checkAndRefreshToken();
+  console.log(token);
+  const response = await fetch(
+    'https://api.linode.com/v4/networking/firewalls/' + firewallid,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: token.token,
+      },
+    },
+  );
+  const data = await response.json();
+  console.log(data);
+  return data;
+};
+
 export const getMonthlyTransfer = async (token: {
   token: string;
   refreshToken: string;

@@ -1,8 +1,18 @@
+/* eslint-disable react/self-closing-comp */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import {useApp} from '../../AppContext';
 import {getFirewalls, getMonthlyTransfer} from '../../Api';
+import {useFocusEffect} from '@react-navigation/native';
 
 type ProgressBarProps = {
   progress: number;
@@ -70,6 +80,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 
 function NetworkScreen(): JSX.Element {
   const {isDarkMode, bearerToken} = useApp();
+  const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
   const [firewalls, setFirewalls] = useState<FirewallResponse>({
     data: [],
     page: 0,
@@ -83,60 +94,151 @@ function NetworkScreen(): JSX.Element {
     quota: 0,
     used: 0,
   });
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const loadFirewalls = async () => {
-      const res = await getFirewalls(bearerToken);
-      console.log(res);
-      setFirewalls(res);
-    };
-    const loadUtilization = async () => {
-      const res = await getMonthlyTransfer(bearerToken);
-      console.log(res);
-      setUtilization(res);
-    };
+  const toggleAccordion = (id: number) => {
+    if (openAccordionId === id) {
+      setOpenAccordionId(null); // Close the accordion if it's currently open
+    } else {
+      setOpenAccordionId(id); // Open the accordion if it's currently closed
+    }
+  };
+
+  const loadFirewalls = async () => {
+    const res = await getFirewalls(bearerToken);
+    console.log(res);
+    setFirewalls(res);
+  };
+  const loadUtilization = async () => {
+    const res = await getMonthlyTransfer(bearerToken);
+    console.log(res);
+    setUtilization(res);
+  };
+
+  const load = () => {
+    setRefreshing(true);
     loadFirewalls();
     loadUtilization();
-  }, [bearerToken]);
+    setRefreshing(false);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+
+      return () => {};
+    }, []),
+  );
 
   const progress = utilization.quota ? utilization.used / utilization.quota : 0;
 
   return (
-    <View
-      style={[
-        styles.container,
-        {backgroundColor: isDarkMode ? '#333' : '#fff'},
-      ]}>
-      {firewalls?.data?.map(firewall => (
-        <View
-          key={firewall.id}
-          style={[
-            styles.card,
-            {backgroundColor: isDarkMode ? '#444' : '#fff'},
-          ]}>
-          <Text
-            style={[styles.cardLabel, {color: isDarkMode ? '#fff' : '#000'}]}>
-            {firewall.label}
-          </Text>
-          <Text
-            style={[
-              styles.cardStatus,
-              {color: firewall.status === 'enabled' ? 'green' : 'red'},
-            ]}>
-            {firewall.status}
-          </Text>
-          <Text
-            style={[styles.cardInfo, {color: isDarkMode ? '#fff' : '#000'}]}>
-            Default Inbound Policy&nbsp; - &nbsp;{firewall.rules.inbound_policy}
-          </Text>
-          <Text
-            style={[styles.cardInfo, {color: isDarkMode ? '#fff' : '#000'}]}>
-            Default Outboud Policy - {firewall.rules.outbound_policy}
-          </Text>
-        </View>
-      ))}
+    <View style={{flex: 1, backgroundColor: isDarkMode ? '#333' : '#fff'}}>
+      <ScrollView
+        style={[
+          styles.container,
+          {backgroundColor: isDarkMode ? '#333' : '#fff'},
+        ]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={load} />
+        }>
+        {firewalls?.data?.map(firewall => (
+          <View key={firewall.id}>
+            <TouchableOpacity
+              style={[
+                styles.card,
+                {backgroundColor: isDarkMode ? '#444' : '#fff'},
+              ]}
+              onPress={() => toggleAccordion(firewall.id)}>
+              <Text
+                style={[
+                  styles.cardLabel,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                {firewall.label}
+              </Text>
+              <Text
+                style={[
+                  styles.cardStatus,
+                  {color: firewall.status === 'enabled' ? 'green' : 'red'},
+                ]}>
+                {firewall.status}
+              </Text>
+              <Text
+                style={[
+                  styles.cardInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                Default Inbound Policy&nbsp; - &nbsp;
+                {firewall.rules.inbound_policy}
+              </Text>
+              <Text
+                style={[
+                  styles.cardInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                Default Outboud Policy - {firewall.rules.outbound_policy}
+              </Text>
+              <Text
+                style={[
+                  styles.showDetailsText,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                {openAccordionId === firewall.id
+                  ? 'Hide Details'
+                  : 'Tap for Details'}
+              </Text>
+            </TouchableOpacity>
 
-      <View style={{flexDirection: 'column', alignItems: 'center'}}>
+            {openAccordionId === firewall.id && (
+              <View style={styles.accordionContent}>
+                {/* Add more details here about the firewall's rules or any other data as needed */}
+                <Text
+                  style={[
+                    styles.sizingInfo,
+                    {color: isDarkMode ? '#fff' : '#000'},
+                  ]}>
+                  Rules:
+                </Text>
+                <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                  Inbound:
+                </Text>
+                {firewall.rules.inbound.length ? (
+                  firewall.rules.inbound.map((rule, index) => (
+                    <Text
+                      style={{color: isDarkMode ? '#fff' : '#000'}}
+                      key={index}>
+                      {rule.label.split('-')[2]}
+                    </Text>
+                  ))
+                ) : (
+                  <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                    No inbound rules
+                  </Text>
+                )}
+                <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                  Outbound:
+                </Text>
+                {firewall.rules.outbound.length ? (
+                  firewall.rules.outbound.map((rule, index) => (
+                    <Text key={index}>{rule.label}</Text>
+                  ))
+                ) : (
+                  <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                    No outbound rules
+                  </Text>
+                )}
+              </View>
+            )}
+          </View>
+        ))}
+      </ScrollView>
+      <View
+        style={{
+          flexDirection: 'column',
+          alignItems: 'center',
+          paddingBottom: 10,
+        }}>
         <Text style={{marginTop: 15, color: isDarkMode ? '#fff' : '#000'}}>
           Monthly Network Transfer Pool
         </Text>
@@ -184,6 +286,24 @@ const styles = StyleSheet.create({
   cardInfo: {
     fontSize: 14,
     marginBottom: 3,
+  },
+  accordionContent: {
+    padding: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', // Even more transparent background for contrast
+    marginBottom: 10,
+    marginLeft: 10,
+    marginRight: 10,
+    borderRadius: 5,
+  },
+  sizingInfo: {
+    fontSize: 20,
+    marginBottom: 6,
+  },
+  showDetailsText: {
+    position: 'absolute',
+    bottom: 10, // Adjust as needed
+    right: 15, // Adjust as needed
+    fontSize: 14,
   },
 });
 

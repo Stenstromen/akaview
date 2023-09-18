@@ -118,10 +118,6 @@ function NetworkScreen(): JSX.Element {
   };
 
   const loadTokenFromKeychain = async () => {
-    console.log('Loading token from keychain...');
-    console.log('Loading token from keychain...');
-    console.log('Loading token from keychain...');
-    console.log('Loading token from keychain...');
     const token = await getTokenDetailsFromKeychain();
     if (token) {
       setBearerToken(token);
@@ -206,42 +202,198 @@ function NetworkScreen(): JSX.Element {
 
             {openAccordionId === firewall.id && (
               <View style={styles.accordionContent}>
-                {/* Add more details here about the firewall's rules or any other data as needed */}
                 <Text
                   style={[
                     styles.sizingInfo,
                     {color: isDarkMode ? '#fff' : '#000'},
                   ]}>
-                  Rules:
+                  Rules
                 </Text>
-                <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
-                  Inbound:
+
+                <Text
+                  style={[
+                    styles.ruleInfo,
+                    {color: isDarkMode ? '#fff' : '#000'},
+                  ]}>
+                  Inbound
                 </Text>
-                {firewall.rules.inbound.length ? (
-                  firewall.rules.inbound.map((rule, index) => (
-                    <Text
-                      style={{color: isDarkMode ? '#fff' : '#000'}}
-                      key={index}>
-                      {rule.label.split('-')[2]}
-                    </Text>
-                  ))
-                ) : (
-                  <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
-                    No inbound rules
-                  </Text>
-                )}
-                <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
-                  Outbound:
-                </Text>
-                {firewall.rules.outbound.length ? (
-                  firewall.rules.outbound.map((rule, index) => (
-                    <Text key={index}>{rule.label}</Text>
-                  ))
-                ) : (
-                  <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                {firewall.rules.inbound.length === 0 ? (
+                  <Text
+                    style={[
+                      styles.columnHeader,
+                      {color: isDarkMode ? '#fff' : '#000'},
+                    ]}>
                     No outbound rules
                   </Text>
+                ) : (
+                  <View style={styles.tableHeader}>
+                    <View style={styles.tableCell}>
+                      <Text
+                        style={[
+                          styles.columnHeader,
+                          {color: isDarkMode ? '#fff' : '#000'},
+                        ]}>
+                        Label
+                      </Text>
+                    </View>
+                    <View style={styles.tableCell}>
+                      <Text
+                        style={[
+                          styles.columnHeader,
+                          {
+                            color: isDarkMode ? '#fff' : '#000',
+                          },
+                        ]}>
+                        Port
+                      </Text>
+                    </View>
+                    <View style={styles.tableCell}>
+                      <Text
+                        style={[
+                          styles.columnHeader,
+                          {color: isDarkMode ? '#fff' : '#000'},
+                        ]}>
+                        Addresses
+                      </Text>
+                    </View>
+                    <View style={styles.tableCell}>
+                      <Text
+                        style={[
+                          styles.columnHeader,
+                          {color: isDarkMode ? '#fff' : '#000'},
+                        ]}>
+                        Action
+                      </Text>
+                    </View>
+                  </View>
                 )}
+                {!firewall.rules.inbound
+                  ? null
+                  : firewall.rules.inbound.map((rule, index) => (
+                      <View style={styles.tableRow} key={index}>
+                        <View style={styles.tableCell}>
+                          <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                            {rule.label.split('-')[2]}
+                          </Text>
+                        </View>
+                        <View style={styles.tableCell}>
+                          <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                            {rule.ports}/{rule.protocol}
+                          </Text>
+                        </View>
+                        <View style={styles.tableCell}>
+                          <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                            {rule.addresses.ipv4
+                              .concat(rule.addresses.ipv6)
+                              .join(',')}
+                          </Text>
+                        </View>
+                        <View style={styles.tableCell}>
+                          <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                            {rule.action}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+
+                <Text
+                  style={[
+                    styles.ruleInfo,
+                    {color: isDarkMode ? '#fff' : '#000'},
+                  ]}>
+                  Outbound
+                </Text>
+                {firewall.rules.outbound.length === 0 ? (
+                  <Text
+                    style={[
+                      styles.columnHeader,
+                      {color: isDarkMode ? '#fff' : '#000'},
+                    ]}>
+                    No outbound rules
+                  </Text>
+                ) : (
+                  <View style={styles.tableHeader}>
+                    <View style={styles.tableCell}>
+                      <Text
+                        style={[
+                          styles.columnHeader,
+                          {color: isDarkMode ? '#fff' : '#000'},
+                        ]}>
+                        Label
+                      </Text>
+                    </View>
+                    <View style={styles.tableCell}>
+                      <Text
+                        style={[
+                          styles.columnHeader,
+                          {color: isDarkMode ? '#fff' : '#000'},
+                        ]}>
+                        Port
+                      </Text>
+                    </View>
+                    <View style={styles.tableCell}>
+                      <Text
+                        style={[
+                          styles.columnHeader,
+                          {color: isDarkMode ? '#fff' : '#000'},
+                        ]}>
+                        Addresses
+                      </Text>
+                    </View>
+                    <View style={styles.tableCell}>
+                      <Text
+                        style={[
+                          styles.columnHeader,
+                          {color: isDarkMode ? '#fff' : '#000'},
+                        ]}>
+                        Action
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {!firewall.rules.outbound
+                  ? null
+                  : firewall.rules.outbound.map((rule, index) => (
+                      <View style={styles.tableRow} key={index}>
+                        <View style={styles.tableCell}>
+                          <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                            {rule.label.split('-')[2]}
+                          </Text>
+                        </View>
+                        <View style={styles.tableCell}>
+                          <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                            {rule.ports}/{rule.protocol}
+                          </Text>
+                        </View>
+                        <View style={styles.tableCell}>
+                          <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                            {rule.addresses.ipv4
+                              .concat(rule.addresses.ipv6)
+                              .join(',')}
+                          </Text>
+                        </View>
+                        <View style={styles.tableCell}>
+                          <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                            {rule.action}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                <Text
+                  style={[
+                    styles.ruleInfo,
+                    {marginTop: 3, color: isDarkMode ? '#fff' : '#000'},
+                  ]}>
+                  ---
+                </Text>
+                <Text
+                  style={[
+                    styles.ruleInfo,
+                    {marginTop: 3, color: isDarkMode ? '#fff' : '#000'},
+                  ]}>
+                  Last Updated {firewall.updated}
+                </Text>
               </View>
             )}
           </View>
@@ -311,13 +463,37 @@ const styles = StyleSheet.create({
   },
   sizingInfo: {
     fontSize: 20,
-    marginBottom: 6,
+    marginBottom: 5,
+  },
+  ruleInfo: {
+    fontSize: 18,
+    marginTop: 1,
+    marginBottom: 3,
   },
   showDetailsText: {
     position: 'absolute',
     bottom: 10, // Adjust as needed
     right: 15, // Adjust as needed
     fontSize: 14,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingBottom: 5,
+    marginBottom: 5,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  tableCell: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  columnHeader: {
+    fontWeight: 'bold',
   },
 });
 

@@ -38,9 +38,6 @@ export const getInstances = async (token: TokenType) =>
 export const getFirewalls = async (token: TokenType) =>
   apiRequest('/networking/firewalls', 'GET', token);
 
-export const getFirewall = async (firewallid: string, token: TokenType) =>
-  apiRequest(`/networking/firewalls/${firewallid}`, 'GET', token);
-
 export const getMonthlyTransfer = async (token: TokenType) =>
   apiRequest('/account/transfer', 'GET', token);
 

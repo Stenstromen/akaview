@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 /**
  * Sample React Native App
@@ -6,7 +7,7 @@
  * @format
  */
 
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import * as Keychain from 'react-native-keychain';
 import {
   ScrollView,
@@ -23,10 +24,11 @@ import {
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 
 import {useApp} from '../../AppContext';
-import {SCOPES} from '../../Oauth';
+import {SCOPES, getTokenDetailsFromKeychain} from '../../Oauth';
 import srvon from '../../assets/srvon.png';
 import srvoff from '../../assets/srvoff.png';
 import {getUsername} from '../../Api';
+import {useFocusEffect} from '@react-navigation/native';
 
 type AuthResult = {
   type: string;
@@ -212,7 +214,6 @@ function MainScreen(): JSX.Element {
     return () => {
       appStateSubscription.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -222,6 +223,23 @@ function MainScreen(): JSX.Element {
     };
     user();
   }, [bearerToken]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadTokenFromKeychain = async () => {
+        console.log('Loading token from keychain...');
+        console.log('Loading token from keychain...');
+        console.log('Loading token from keychain...');
+        console.log('Loading token from keychain...');
+        const token = await getTokenDetailsFromKeychain();
+        if (token) {
+          setBearerToken(token);
+        }
+      };
+
+      loadTokenFromKeychain();
+    }, []),
+  );
 
   return (
     <>

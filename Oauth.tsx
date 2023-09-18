@@ -73,7 +73,6 @@ async function saveTokenToKeychain(
       'bearerToken',
       JSON.stringify({token, refreshToken, expiresIn}),
     );
-    //setBearerToken({token, refreshToken, expiresIn});
     console.log('Token details saved to keychain');
   } catch (error) {
     console.error('Failed to save token details to keychain:', error);

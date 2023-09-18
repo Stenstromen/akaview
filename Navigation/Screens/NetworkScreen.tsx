@@ -13,6 +13,7 @@ import {
 import {useApp} from '../../AppContext';
 import {getFirewalls, getMonthlyTransfer} from '../../Api';
 import {useFocusEffect} from '@react-navigation/native';
+import {getTokenDetailsFromKeychain} from '../../Oauth';
 
 type ProgressBarProps = {
   progress: number;
@@ -79,7 +80,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 );
 
 function NetworkScreen(): JSX.Element {
-  const {isDarkMode, bearerToken} = useApp();
+  const {isDarkMode, bearerToken, setBearerToken} = useApp();
   const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
   const [firewalls, setFirewalls] = useState<FirewallResponse>({
     data: [],
@@ -109,10 +110,22 @@ function NetworkScreen(): JSX.Element {
     console.log(res);
     setFirewalls(res);
   };
+
   const loadUtilization = async () => {
     const res = await getMonthlyTransfer(bearerToken);
     console.log(res);
     setUtilization(res);
+  };
+
+  const loadTokenFromKeychain = async () => {
+    console.log('Loading token from keychain...');
+    console.log('Loading token from keychain...');
+    console.log('Loading token from keychain...');
+    console.log('Loading token from keychain...');
+    const token = await getTokenDetailsFromKeychain();
+    if (token) {
+      setBearerToken(token);
+    }
   };
 
   const load = () => {
@@ -120,6 +133,7 @@ function NetworkScreen(): JSX.Element {
     loadFirewalls();
     loadUtilization();
     setRefreshing(false);
+    loadTokenFromKeychain();
   };
 
   useFocusEffect(

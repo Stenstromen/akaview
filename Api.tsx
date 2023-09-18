@@ -1,100 +1,48 @@
 import {checkAndRefreshToken} from './Oauth';
 
-export const getInstances = async (token: {
+type TokenType = {
   token: string;
   refreshToken: string;
   expiresIn: number;
-}) => {
-  await checkAndRefreshToken();
-  console.log(token);
-  const response = await fetch('https://api.linode.com/v4/linode/instances', {
-    method: 'GET',
-    headers: {
-      Authorization: token.token,
-    },
-  });
-  const data = await response.json();
-  console.log(data);
-  return data;
 };
 
-export const getFirewalls = async (token: {
-  token: string;
-  refreshToken: string;
-  expiresIn: number;
-}) => {
-  await checkAndRefreshToken();
-  console.log(token);
-  const response = await fetch(
-    'https://api.linode.com/v4/networking/firewalls',
-    {
-      method: 'GET',
-      headers: {
-        Authorization: token.token,
-      },
-    },
-  );
-  const data = await response.json();
-  console.log(data);
-  return data;
-};
+const BASE_URL = 'https://api.linode.com/v4';
 
-export const getFirewall = async (
-  firewallid: string,
-  token: {
-    token: string;
-    refreshToken: string;
-    expiresIn: number;
-  },
+const apiRequest = async (
+  endpoint: string,
+  method: 'GET' | 'POST' = 'GET',
+  token: TokenType,
+  body?: any,
 ) => {
   await checkAndRefreshToken();
   console.log(token);
-  const response = await fetch(
-    'https://api.linode.com/v4/networking/firewalls/' + firewallid,
-    {
-      method: 'GET',
-      headers: {
-        Authorization: token.token,
-      },
+
+  const options = {
+    method,
+    headers: {
+      Authorization: token.token,
+      'Content-Type': 'application/json',
     },
-  );
+    ...(body && {body: JSON.stringify(body)}),
+  };
+
+  const response = await fetch(`${BASE_URL}${endpoint}`, options);
   const data = await response.json();
   console.log(data);
   return data;
 };
 
-export const getMonthlyTransfer = async (token: {
-  token: string;
-  refreshToken: string;
-  expiresIn: number;
-}) => {
-  await checkAndRefreshToken();
-  console.log(token);
-  const response = await fetch('https://api.linode.com/v4/account/transfer', {
-    method: 'GET',
-    headers: {
-      Authorization: token.token,
-    },
-  });
-  const data = await response.json();
-  console.log(data);
-  return data;
-};
+export const getInstances = async (token: TokenType) =>
+  apiRequest('/linode/instances', 'GET', token);
 
-export const getUsername = async (token: {
-  token: string;
-  refreshToken: string;
-  expiresIn: number;
-}) => {
-  await checkAndRefreshToken();
-  console.log(token);
-  const response = await fetch('https://api.linode.com/v4/profile', {
-    method: 'GET',
-    headers: {
-      Authorization: token.token,
-    },
-  });
-  const data = await response.json();
-  console.log(data);
-  return data;
-};
+export const getFirewalls = async (token: TokenType) =>
+  apiRequest('/networking/firewalls', 'GET', token);
+
+export const getFirewall = async (firewallid: string, token: TokenType) =>
+  apiRequest(`/networking/firewalls/${firewallid}`, 'GET', token);
+
+export const getMonthlyTransfer = async (token: TokenType) =>
+  apiRequest('/account/transfer', 'GET', token);
+
+export const getUsername = async (token: TokenType) =>
+  apiRequest('/profile', 'GET', token);

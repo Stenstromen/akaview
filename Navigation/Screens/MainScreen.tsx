@@ -7,7 +7,7 @@
  * @format
  */
 
-import React, {useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import * as Keychain from 'react-native-keychain';
 import {
   ScrollView,
@@ -28,24 +28,8 @@ import {SCOPES, getTokenDetailsFromKeychain} from '../../Oauth';
 import srvon from '../../assets/srvon.png';
 import srvoff from '../../assets/srvoff.png';
 import {getUsername} from '../../Api';
+import {AuthResult, BearerData, IOSButtonProps} from '../../Types';
 import {useFocusEffect} from '@react-navigation/native';
-
-type AuthResult = {
-  type: string;
-  url?: string;
-};
-
-type BearerData = {
-  access_token: string;
-  token_type: string;
-  refresh_token: string;
-  expires_in: number;
-};
-
-type IOSButtonProps = {
-  onPress: () => void;
-  title: string;
-};
 
 const IOSButton: React.FC<IOSButtonProps> = ({onPress, title}) => {
   return (
@@ -67,7 +51,7 @@ const IOSButton: React.FC<IOSButtonProps> = ({onPress, title}) => {
 function MainScreen(): JSX.Element {
   console.log('App started');
   const {isDarkMode, bearerToken, setBearerToken} = useApp();
-  const [username, setUsername] = React.useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
   async function saveTokenToKeychain(
     token: string,

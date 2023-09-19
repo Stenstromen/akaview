@@ -14,52 +14,8 @@ import {useApp} from '../../AppContext';
 import {getFirewalls, getMonthlyTransfer} from '../../Api';
 import {useFocusEffect} from '@react-navigation/native';
 import {getTokenDetailsFromKeychain} from '../../Oauth';
-
-type ProgressBarProps = {
-  progress: number;
-  width: number;
-  height?: number;
-  backgroundColor?: string;
-  progressColor?: string;
-};
-
-interface FirewallData {
-  created: string;
-  id: number;
-  label: string;
-  rules: FirewallRules;
-  status: 'enabled' | 'disabled'; // You only provided "enabled" but I'm assuming there's also a "disabled" state.
-  tags: string[];
-  updated: string;
-}
-
-interface FirewallRules {
-  inbound: FirewallRule[];
-  inbound_policy: 'DROP' | 'ACCEPT'; // Assuming inbound_policy can be either DROP or ACCEPT
-  outbound: FirewallRule[];
-  outbound_policy: 'DROP' | 'ACCEPT'; // Assuming outbound_policy can be either DROP or ACCEPT
-}
-
-interface FirewallRule {
-  action: 'ACCEPT' | 'DROP'; // Assuming action can be either ACCEPT or DROP
-  addresses: FirewallAddresses;
-  description: string;
-  label: string;
-  ports: string;
-  protocol: 'TCP' | 'UDP'; // You provided only TCP, but I'm assuming it can also be UDP
-}
-
-interface FirewallAddresses {
-  ipv4: string[];
-  ipv6: string[];
-}
-
-interface FirewallResponse {
-  data: FirewallData[];
-  page: number;
-  pages: number;
-  results: number;
-}
+import {humanReadableDate} from '../../Utils';
+import {ProgressBarProps, FirewallResponse} from '../../Types';
 
 const ProgressBar: React.FC<ProgressBarProps> = ({
   progress,
@@ -179,7 +135,7 @@ function NetworkScreen(): JSX.Element {
                   styles.cardInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                Default Inbound Policy&nbsp; - &nbsp;
+                Default Inbound&nbsp; - &nbsp;
                 {firewall.rules.inbound_policy}
               </Text>
               <Text
@@ -187,7 +143,7 @@ function NetworkScreen(): JSX.Element {
                   styles.cardInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                Default Outboud Policy - {firewall.rules.outbound_policy}
+                Default Outboud - {firewall.rules.outbound_policy}
               </Text>
               <Text
                 style={[
@@ -392,7 +348,7 @@ function NetworkScreen(): JSX.Element {
                     styles.ruleInfo,
                     {marginTop: 3, color: isDarkMode ? '#fff' : '#000'},
                   ]}>
-                  Last Updated {firewall.updated}
+                  Last Updated {humanReadableDate(firewall.updated)}
                 </Text>
               </View>
             )}

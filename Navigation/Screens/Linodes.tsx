@@ -9,44 +9,13 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import {useApp} from '../../AppContext';
 import {getInstances} from '../../Api';
+import {humanReadableDate} from '../../Utils';
 import {useFocusEffect} from '@react-navigation/native';
+import {LinodeResponse} from '../../Types';
 import {getTokenDetailsFromKeychain} from '../../Oauth';
-
-interface LinodeData {
-  alerts: object[];
-  backups: object[];
-  created: string;
-  group: string;
-  has_user_data: boolean;
-  host_uuid: string;
-  hypervisor: string;
-  id: number;
-  image: string;
-  ipv4: string[];
-  ipv6: string;
-  label: string;
-  region: string;
-  specs: {
-    disk: number;
-    memory: number;
-    transfer: number;
-    vcpus: number;
-  };
-  status: string;
-  tags: string[];
-  type: string;
-  updated: string;
-  watchdog_enabled: boolean;
-}
-
-interface LinodeResponse {
-  data: LinodeData[];
-  page: number;
-  pages: number;
-  results: number;
-}
 
 function Linodes(): JSX.Element {
   const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
@@ -183,8 +152,67 @@ function Linodes(): JSX.Element {
                   styles.cardInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                Created: {instance.created}
+                Last Backup:{' '}
+                {instance.backups.last_successful
+                  ? humanReadableDate(instance.backups.last_successful)
+                  : 'Never'}
               </Text>
+              <Text
+                style={[
+                  styles.cardInfo,
+                  {color: isDarkMode ? '#fff' : '#000'},
+                ]}>
+                Created: {humanReadableDate(instance.created)}
+              </Text>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.customButton,
+                    {backgroundColor: isDarkMode ? '#444' : '#ddd'},
+                  ]}
+                  onPress={() => Clipboard.setString(instance.ipv4.join(', '))}>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      marginBottom: 10,
+                      color: isDarkMode ? '#ccc' : '#333',
+                    }}>
+                    Copy IPv4
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.customButton,
+                    {backgroundColor: isDarkMode ? '#444' : '#ddd'},
+                  ]}
+                  onPress={() => Clipboard.setString(instance.ipv6)}>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      marginBottom: 10,
+                      color: isDarkMode ? '#ccc' : '#333',
+                    }}>
+                    Copy IPv6
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.customButton,
+                    {backgroundColor: isDarkMode ? '#444' : '#ddd'},
+                  ]}
+                  onPress={() => Clipboard.setString(String(instance.id))}>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      marginBottom: 10,
+                      color: isDarkMode ? '#ccc' : '#333',
+                    }}>
+                    Copy ID
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>
@@ -248,6 +276,18 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginRight: 10,
     borderRadius: 5,
+  },
+  buttonContainer: {
+    flexDirection: 'row', // Arrange buttons horizontally
+    justifyContent: 'space-between', // Distribute buttons with equal space
+    marginTop: 10, // Some margin on top for spacing
+  },
+  customButton: {
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center', // Center the text inside the button
+    flex: 1, // Make each button take equal width
+    marginHorizontal: 5, // Give some space between the buttons
   },
 });
 

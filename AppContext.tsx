@@ -2,21 +2,12 @@ import React, {createContext, useContext, useState, useEffect} from 'react';
 import {Appearance} from 'react-native';
 
 import {getTokenDetailsFromKeychain} from './Oauth';
+import {TokenType} from './Types';
 
 type AppContextType = {
   isDarkMode: boolean;
-  bearerToken: {
-    token: string;
-    refreshToken: string;
-    expiresIn: number;
-  };
-  setBearerToken: React.Dispatch<
-    React.SetStateAction<{
-      token: string;
-      refreshToken: string;
-      expiresIn: number;
-    }>
-  >;
+  bearerToken: TokenType;
+  setBearerToken: React.Dispatch<React.SetStateAction<TokenType>>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -38,11 +29,7 @@ export const AppProvider: React.FC<Props> = ({children}) => {
     Appearance.getColorScheme() === 'dark',
   );
 
-  const [bearerToken, setBearerToken] = useState<{
-    token: string;
-    refreshToken: string;
-    expiresIn: number;
-  }>({
+  const [bearerToken, setBearerToken] = useState<TokenType>({
     token: '',
     refreshToken: '',
     expiresIn: 0,

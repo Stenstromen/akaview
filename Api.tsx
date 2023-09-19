@@ -1,10 +1,5 @@
+import {TokenType} from './Types';
 import {checkAndRefreshToken} from './Oauth';
-
-type TokenType = {
-  token: string;
-  refreshToken: string;
-  expiresIn: number;
-};
 
 const BASE_URL = 'https://api.linode.com/v4';
 

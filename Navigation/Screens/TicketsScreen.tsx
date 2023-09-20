@@ -1,6 +1,6 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState, useCallback} from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, {useCallback, useState} from 'react';
 import {
   View,
   Text,
@@ -9,19 +9,17 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import Clipboard from '@react-native-clipboard/clipboard';
 import {useApp} from '../../AppContext';
-import {getInstances} from '../../Api';
-import {humanReadableDate} from '../../Utils';
 import {useFocusEffect} from '@react-navigation/native';
-import {LinodeResponse} from '../../Types';
 import {getTokenDetailsFromKeychain} from '../../Oauth';
+import {TicketResponse} from '../../Types';
+import {getTickets} from '../../Api';
 
-function Linodes(): JSX.Element {
+function TicketsScreen(): JSX.Element {
   const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
   const {isDarkMode, bearerToken, setBearerToken} = useApp();
-  const [instances, setInstances] = useState<LinodeResponse | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [tickets, setTickets] = useState<TicketResponse | null>(null);
 
   const toggleAccordion = (id: number) => {
     if (openAccordionId === id) {
@@ -31,33 +29,31 @@ function Linodes(): JSX.Element {
     }
   };
 
-  const loadInstances = async () => {
-    setRefreshing(true); // Start the refresh
-    const instancess = await getInstances(bearerToken);
-    setInstances(instancess);
-    setRefreshing(false); // End the refresh after data is fetched
-  };
-
   const loadTokenFromKeychain = async () => {
-    console.log('Loading token from keychain...');
-    console.log('Loading token from keychain...');
-    console.log('Loading token from keychain...');
-    console.log('Loading token from keychain...');
     const token = await getTokenDetailsFromKeychain();
     if (token) {
       setBearerToken(token);
     }
   };
 
+  const loadTickets = async () => {
+    console.log('Loading tickets...');
+    setRefreshing(true); // Start the refresh
+    const res = await getTickets(bearerToken);
+    setTickets(res);
+    setRefreshing(false); // End the refresh after data is fetched
+  };
+
+  const load = () => {
+    loadTokenFromKeychain();
+    loadTickets();
+  };
+
   useFocusEffect(
     useCallback(() => {
-      loadTokenFromKeychain();
-      loadInstances();
+      load();
 
-      // Return function will run on component unmount
-      return () => {
-        // You can put any cleanup code here if needed
-      };
+      return () => {};
     }, []),
   );
 
@@ -68,41 +64,41 @@ function Linodes(): JSX.Element {
         {backgroundColor: isDarkMode ? '#333' : '#fff'},
       ]}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={loadInstances} />
+        <RefreshControl refreshing={refreshing} onRefresh={loadTickets} />
       }>
-      {instances?.data?.map(instance => (
-        <View key={instance.id}>
+      {tickets?.data?.map(ticket => (
+        <View key={ticket.id}>
           <TouchableOpacity
             style={styles.card}
-            onPress={() => toggleAccordion(instance.id)}>
+            onPress={() => toggleAccordion(ticket.id)}>
             <View style={styles.cardMainContent}>
               <Text
                 style={[
                   styles.cardLabel,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                {instance.label}
+                {ticket.summary}
               </Text>
               <Text
                 style={[
                   styles.cardStatus,
-                  {color: instance.status === 'running' ? 'green' : 'red'},
+                  {color: ticket.status === 'open' ? 'yellow' : 'green'},
                 ]}>
-                {instance.status}
+                {ticket.status}
               </Text>
               <Text
                 style={[
                   styles.cardInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                Region: {instance.region}
+                Opened by: {ticket.opened_by}
               </Text>
               <Text
                 style={[
                   styles.cardInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                Type: {instance.type}
+                Last updated by: {ticket.updated_by}
               </Text>
             </View>
             <Text
@@ -110,108 +106,44 @@ function Linodes(): JSX.Element {
                 styles.showDetailsText,
                 {color: isDarkMode ? '#fff' : '#000'},
               ]}>
-              {openAccordionId === instance.id
+              {openAccordionId === ticket.id
                 ? 'Hide Details'
                 : 'Tap for Details'}
             </Text>
           </TouchableOpacity>
 
-          {openAccordionId === instance.id && (
+          {openAccordionId === ticket.id && (
             <View style={styles.accordionContent}>
               <Text
                 style={[
-                  styles.sizingInfo,
+                  styles.detailedInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                {instance.specs.vcpus}x{instance.specs.memory / 1024}x
-                {instance.specs.disk / 1024}
+                {ticket.description}
               </Text>
               <Text
                 style={[
                   styles.cardInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                IPv4: {instance.ipv4.join(', ')}
+                Ticket ID: {ticket.id}
               </Text>
               <Text
                 style={[
                   styles.cardInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                IPv6: {instance.ipv6}
+                Entity ID: {ticket.entity?.id}
               </Text>
               <Text
                 style={[
                   styles.cardInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                Linode ID: {instance.id}
-              </Text>
-              <Text
-                style={[
-                  styles.cardInfo,
-                  {color: isDarkMode ? '#fff' : '#000'},
-                ]}>
-                Last Backup:{' '}
-                {instance.backups.last_successful
-                  ? humanReadableDate(instance.backups.last_successful)
-                  : 'Never'}
-              </Text>
-              <Text
-                style={[
-                  styles.cardInfo,
-                  {color: isDarkMode ? '#fff' : '#000'},
-                ]}>
-                Created: {humanReadableDate(instance.created)}
+                Entity Label: {ticket.entity?.label}
               </Text>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.customButton,
-                    {backgroundColor: isDarkMode ? '#444' : '#ddd'},
-                  ]}
-                  onPress={() => Clipboard.setString(instance.ipv4.join(', '))}>
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      marginBottom: 10,
-                      color: isDarkMode ? '#ccc' : '#333',
-                    }}>
-                    Copy IPv4
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.customButton,
-                    {backgroundColor: isDarkMode ? '#444' : '#ddd'},
-                  ]}
-                  onPress={() => Clipboard.setString(instance.ipv6)}>
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      marginBottom: 10,
-                      color: isDarkMode ? '#ccc' : '#333',
-                    }}>
-                    Copy IPv6
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.customButton,
-                    {backgroundColor: isDarkMode ? '#444' : '#ddd'},
-                  ]}
-                  onPress={() => Clipboard.setString(String(instance.id))}>
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      marginBottom: 10,
-                      color: isDarkMode ? '#ccc' : '#333',
-                    }}>
-                    Copy ID
-                  </Text>
-                </TouchableOpacity>
+                {/* Any actions you'd want for each ticket can be added here */}
               </View>
             </View>
           )}
@@ -259,7 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 3,
   },
-  sizingInfo: {
+  detailedInfo: {
     fontSize: 20,
     marginBottom: 6,
   },
@@ -291,4 +223,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Linodes;
+export default TicketsScreen;

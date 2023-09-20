@@ -108,3 +108,33 @@ export interface FirewallResponse {
   pages: number;
   results: number;
 }
+
+interface Ticket {
+  attachments: (string | null)[];
+  closable: boolean;
+  closed?: string; // Optional since it might not always be there
+  description: string;
+  entity: Entity;
+  gravatar_id: string;
+  id: number;
+  opened: string;
+  opened_by: string;
+  status: 'open' | 'closed' | 'other'; // You can extend this union type based on potential statuses
+  summary: string;
+  updated: string;
+  updated_by: string;
+}
+
+interface Entity {
+  id: number;
+  label: string;
+  type: string;
+  url: string;
+}
+
+export interface TicketResponse {
+  data: Ticket[];
+  page: number;
+  pages: number;
+  results: number;
+}

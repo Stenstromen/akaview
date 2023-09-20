@@ -23,7 +23,6 @@ const apiRequest = async (
 
   const response = await fetch(`${BASE_URL}${endpoint}`, options);
   const data = await response.json();
-  console.log(data);
   return data;
 };
 
@@ -38,3 +37,6 @@ export const getMonthlyTransfer = async (token: TokenType) =>
 
 export const getUsername = async (token: TokenType) =>
   apiRequest('/profile', 'GET', token);
+
+export const getTickets = async (token: TokenType) =>
+  apiRequest('/support/tickets', 'GET', token);

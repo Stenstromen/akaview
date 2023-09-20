@@ -4,6 +4,7 @@ import {useApp} from '../AppContext';
 import MainScreen from './Screens/MainScreen';
 import Linodes from './Screens/Linodes';
 import NetworkScreen from './Screens/NetworkScreen';
+import TicketsScreen from './Screens/TicketsScreen';
 import SettingsScreen from './Screens/SettingsScreen';
 
 const Drawer = createDrawerNavigator();
@@ -45,6 +46,11 @@ function DrawerNavigator(): JSX.Element {
         name="Network"
         component={NetworkScreen}
         options={{title: 'Network'}}
+      />
+      <Drawer.Screen
+        name="Tickets"
+        component={TicketsScreen}
+        options={{title: 'Tickets'}}
       />
       <Drawer.Screen
         name="Settings"

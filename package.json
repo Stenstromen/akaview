@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@jonasmerlin/react-native-markdown-display": "github:jonasmerlin/react-native-markdown-display",
     "@react-native-clipboard/clipboard": "^1.11.2",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-navigation/drawer": "^6.6.3",

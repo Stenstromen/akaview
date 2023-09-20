@@ -15,11 +15,10 @@ import {getInstances} from '../../Api';
 import {humanReadableDate} from '../../Utils';
 import {useFocusEffect} from '@react-navigation/native';
 import {LinodeResponse} from '../../Types';
-import {getTokenDetailsFromKeychain} from '../../Oauth';
 
 function Linodes(): JSX.Element {
   const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
-  const {isDarkMode, bearerToken, setBearerToken} = useApp();
+  const {isDarkMode, bearerToken} = useApp();
   const [instances, setInstances] = useState<LinodeResponse | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -38,20 +37,9 @@ function Linodes(): JSX.Element {
     setRefreshing(false); // End the refresh after data is fetched
   };
 
-  const loadTokenFromKeychain = async () => {
-    console.log('Loading token from keychain...');
-    console.log('Loading token from keychain...');
-    console.log('Loading token from keychain...');
-    console.log('Loading token from keychain...');
-    const token = await getTokenDetailsFromKeychain();
-    if (token) {
-      setBearerToken(token);
-    }
-  };
-
   useFocusEffect(
     useCallback(() => {
-      loadTokenFromKeychain();
+      //loadTokenFromKeychain();
       loadInstances();
 
       // Return function will run on component unmount

@@ -21,7 +21,7 @@ const apiRequest = async (
     ...(body && {body: JSON.stringify(body)}),
   };
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, options);
+  const response = await fetch(`${BASE_URL}${endpoint}?page_size=500`, options);
   const data = await response.json();
   return data;
 };
@@ -40,3 +40,6 @@ export const getUsername = async (token: TokenType) =>
 
 export const getTickets = async (token: TokenType) =>
   apiRequest('/support/tickets', 'GET', token);
+
+export const getTicketReplies = async (token: TokenType, ticketId: number) =>
+  apiRequest(`/support/tickets/${ticketId}/replies`, 'GET', token);

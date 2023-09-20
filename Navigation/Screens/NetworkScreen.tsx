@@ -13,7 +13,6 @@ import {
 import {useApp} from '../../AppContext';
 import {getFirewalls, getMonthlyTransfer} from '../../Api';
 import {useFocusEffect} from '@react-navigation/native';
-import {getTokenDetailsFromKeychain} from '../../Oauth';
 import {humanReadableDate} from '../../Utils';
 import {ProgressBarProps, FirewallResponse} from '../../Types';
 
@@ -36,7 +35,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 );
 
 function NetworkScreen(): JSX.Element {
-  const {isDarkMode, bearerToken, setBearerToken} = useApp();
+  const {isDarkMode, bearerToken} = useApp();
   const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
   const [firewalls, setFirewalls] = useState<FirewallResponse>({
     data: [],
@@ -73,19 +72,11 @@ function NetworkScreen(): JSX.Element {
     setUtilization(res);
   };
 
-  const loadTokenFromKeychain = async () => {
-    const token = await getTokenDetailsFromKeychain();
-    if (token) {
-      setBearerToken(token);
-    }
-  };
-
   const load = () => {
     setRefreshing(true);
     loadFirewalls();
     loadUtilization();
     setRefreshing(false);
-    loadTokenFromKeychain();
   };
 
   useFocusEffect(

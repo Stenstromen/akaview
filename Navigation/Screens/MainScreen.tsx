@@ -7,7 +7,7 @@
  * @format
  */
 
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import * as Keychain from 'react-native-keychain';
 import {
   ScrollView,
@@ -24,12 +24,11 @@ import {
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 
 import {useApp} from '../../AppContext';
-import {SCOPES, getTokenDetailsFromKeychain} from '../../Oauth';
+import {SCOPES} from '../../Oauth';
 import srvon from '../../assets/srvon.png';
 import srvoff from '../../assets/srvoff.png';
 import {getUsername} from '../../Api';
 import {AuthResult, BearerData, IOSButtonProps} from '../../Types';
-import {useFocusEffect} from '@react-navigation/native';
 
 const IOSButton: React.FC<IOSButtonProps> = ({onPress, title}) => {
   return (
@@ -207,23 +206,6 @@ function MainScreen(): JSX.Element {
     };
     user();
   }, [bearerToken]);
-
-  useFocusEffect(
-    useCallback(() => {
-      const loadTokenFromKeychain = async () => {
-        console.log('Loading token from keychain...');
-        console.log('Loading token from keychain...');
-        console.log('Loading token from keychain...');
-        console.log('Loading token from keychain...');
-        const token = await getTokenDetailsFromKeychain();
-        if (token) {
-          setBearerToken(token);
-        }
-      };
-
-      loadTokenFromKeychain();
-    }, []),
-  );
 
   return (
     <>

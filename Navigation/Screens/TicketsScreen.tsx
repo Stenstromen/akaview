@@ -9,30 +9,32 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import Markdown from '@jonasmerlin/react-native-markdown-display';
 import {useApp} from '../../AppContext';
 import {useFocusEffect} from '@react-navigation/native';
-import {getTokenDetailsFromKeychain} from '../../Oauth';
-import {TicketResponse} from '../../Types';
-import {getTickets} from '../../Api';
+import {TicketResponse, TicketReplyResponse} from '../../Types';
+import {getTickets, getTicketReplies} from '../../Api';
+import {humanReadableDate} from '../../Utils';
 
 function TicketsScreen(): JSX.Element {
   const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
-  const {isDarkMode, bearerToken, setBearerToken} = useApp();
+  const {isDarkMode, bearerToken} = useApp();
   const [refreshing, setRefreshing] = useState(false);
   const [tickets, setTickets] = useState<TicketResponse | null>(null);
+  const [ticketReply, setTicketReply] = useState<TicketReplyResponse | null>(
+    null,
+  );
 
   const toggleAccordion = (id: number) => {
     if (openAccordionId === id) {
       setOpenAccordionId(null); // Close the accordion if it's currently open
     } else {
       setOpenAccordionId(id); // Open the accordion if it's currently closed
-    }
-  };
-
-  const loadTokenFromKeychain = async () => {
-    const token = await getTokenDetailsFromKeychain();
-    if (token) {
-      setBearerToken(token);
+      const loadTicketReplies = async () => {
+        const ticketReplies = await getTicketReplies(bearerToken, id);
+        setTicketReply(ticketReplies);
+      };
+      loadTicketReplies();
     }
   };
 
@@ -41,11 +43,12 @@ function TicketsScreen(): JSX.Element {
     setRefreshing(true); // Start the refresh
     const res = await getTickets(bearerToken);
     setTickets(res);
+    console.log(res);
     setRefreshing(false); // End the refresh after data is fetched
   };
 
   const load = () => {
-    loadTokenFromKeychain();
+    //loadTokenFromKeychain();
     loadTickets();
   };
 
@@ -119,8 +122,153 @@ function TicketsScreen(): JSX.Element {
                   styles.detailedInfo,
                   {color: isDarkMode ? '#fff' : '#000'},
                 ]}>
-                {ticket.description}
+                <Markdown
+                  style={{
+                    body: {color: isDarkMode ? '#fff' : '#000'},
+                    heading1: {color: isDarkMode ? '#fff' : '#000'},
+                    heading2: {color: isDarkMode ? '#fff' : '#000'},
+                    heading3: {color: isDarkMode ? '#fff' : '#000'},
+                    heading4: {color: isDarkMode ? '#fff' : '#000'},
+                    heading5: {color: isDarkMode ? '#fff' : '#000'},
+                    heading6: {color: isDarkMode ? '#fff' : '#000'},
+                    hr: {color: isDarkMode ? '#fff' : '#000'},
+                    strong: {color: isDarkMode ? '#fff' : '#000'},
+                    em: {color: isDarkMode ? '#fff' : '#000'},
+                    s: {color: isDarkMode ? '#fff' : '#000'},
+                    del: {color: isDarkMode ? '#fff' : '#000'},
+                    link: {color: isDarkMode ? '#fff' : '#000'},
+                    blockquote: {
+                      color: isDarkMode ? '#fff' : '#000',
+                      backgroundColor: isDarkMode ? '#333' : '#fff',
+                    },
+                    bullet_list: {color: isDarkMode ? '#fff' : '#000'},
+                    ordered_list: {color: isDarkMode ? '#fff' : '#000'},
+                    list_item: {color: isDarkMode ? '#fff' : '#000'},
+                    code_inline: {
+                      color: isDarkMode ? '#fff' : '#000',
+                      backgroundColor: isDarkMode ? '#333' : '#fff',
+                    },
+                    code_block: {
+                      color: isDarkMode ? '#fff' : '#000',
+                      backgroundColor: isDarkMode ? '#333' : '#fff',
+                    },
+                    fence: {
+                      color: isDarkMode ? '#fff' : '#000',
+                      backgroundColor: isDarkMode ? '#333' : '#fff',
+                    },
+                    table: {color: isDarkMode ? '#fff' : '#000'},
+                    thead: {color: isDarkMode ? '#fff' : '#000'},
+                    tbody: {color: isDarkMode ? '#fff' : '#000'},
+                    th: {color: isDarkMode ? '#fff' : '#000'},
+                    tr: {color: isDarkMode ? '#fff' : '#000'},
+                    td: {color: isDarkMode ? '#fff' : '#000'},
+                    blocklink: {color: isDarkMode ? '#fff' : '#000'},
+                    image: {color: isDarkMode ? '#fff' : '#000'},
+                    text: {color: isDarkMode ? '#fff' : '#000'},
+                    textgroup: {color: isDarkMode ? '#fff' : '#000'},
+                    paragraph: {color: isDarkMode ? '#fff' : '#000'},
+                    hardbreak: {color: isDarkMode ? '#fff' : '#000'},
+                    softbreak: {color: isDarkMode ? '#fff' : '#000'},
+                    pre: {color: isDarkMode ? '#fff' : '#000'},
+                    inline: {color: isDarkMode ? '#fff' : '#000'},
+                    span: {color: isDarkMode ? '#fff' : '#000'},
+                  }}>
+                  {ticket.description}
+                </Markdown>
               </Text>
+              {ticketReply?.data?.map(reply => (
+                <Text style={{color: isDarkMode ? '#fff' : '#000'}}>
+                  <View
+                    style={{
+                      marginTop: 10,
+                      marginBottom: 10,
+                    }}>
+                    <Text
+                      style={{
+                        color: isDarkMode ? '#fff' : '#000',
+                        paddingTop: 12,
+                        paddingBottom: 12,
+                        paddingLeft: 10,
+                        paddingRight: 10,
+                        borderTopWidth: 1,
+                        borderColor: isDarkMode ? '#fff' : '#000',
+                        borderRadius: 5,
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                        fontSize: 16,
+                      }}>
+                      {reply.created_by}{' '}
+                      {reply.from_linode ? '(Linode) ' : null}@{' '}
+                      {humanReadableDate(reply.created)}
+                    </Text>
+                    <View
+                      style={{
+                        marginTop: 10,
+                        height: 1,
+                        width: '90%', // Reduced width to 90% to see the effect
+                        backgroundColor: isDarkMode ? '#fff' : '#000',
+                        borderRadius: 2.5,
+                      }}
+                    />
+                  </View>
+
+                  <Markdown
+                    key={reply.id}
+                    style={{
+                      body: {color: isDarkMode ? '#fff' : '#000'},
+                      heading1: {color: isDarkMode ? '#fff' : '#000'},
+                      heading2: {color: isDarkMode ? '#fff' : '#000'},
+                      heading3: {color: isDarkMode ? '#fff' : '#000'},
+                      heading4: {color: isDarkMode ? '#fff' : '#000'},
+                      heading5: {color: isDarkMode ? '#fff' : '#000'},
+                      heading6: {color: isDarkMode ? '#fff' : '#000'},
+                      hr: {color: isDarkMode ? '#fff' : '#000'},
+                      strong: {color: isDarkMode ? '#fff' : '#000'},
+                      em: {color: isDarkMode ? '#fff' : '#000'},
+                      s: {color: isDarkMode ? '#fff' : '#000'},
+                      del: {color: isDarkMode ? '#fff' : '#000'},
+                      link: {color: isDarkMode ? '#fff' : '#000'},
+                      blockquote: {
+                        color: isDarkMode ? '#fff' : '#000',
+                        backgroundColor: isDarkMode ? '#333' : '#fff',
+                      },
+                      bullet_list: {color: isDarkMode ? '#fff' : '#000'},
+                      ordered_list: {color: isDarkMode ? '#fff' : '#000'},
+                      list_item: {color: isDarkMode ? '#fff' : '#000'},
+                      code_inline: {
+                        color: isDarkMode ? '#fff' : '#000',
+                        backgroundColor: isDarkMode ? '#333' : '#fff',
+                      },
+                      code_block: {
+                        color: isDarkMode ? '#fff' : '#000',
+                        backgroundColor: isDarkMode ? '#333' : '#fff',
+                      },
+                      fence: {
+                        color: isDarkMode ? '#fff' : '#000',
+                        backgroundColor: isDarkMode ? '#333' : '#fff',
+                      },
+                      table: {color: isDarkMode ? '#fff' : '#000'},
+                      thead: {color: isDarkMode ? '#fff' : '#000'},
+                      tbody: {color: isDarkMode ? '#fff' : '#000'},
+                      th: {color: isDarkMode ? '#fff' : '#000'},
+                      tr: {color: isDarkMode ? '#fff' : '#000'},
+                      td: {color: isDarkMode ? '#fff' : '#000'},
+                      blocklink: {color: isDarkMode ? '#fff' : '#000'},
+                      image: {color: isDarkMode ? '#fff' : '#000'},
+                      text: {color: isDarkMode ? '#fff' : '#000'},
+                      textgroup: {color: isDarkMode ? '#fff' : '#000'},
+                      paragraph: {color: isDarkMode ? '#fff' : '#000'},
+                      hardbreak: {color: isDarkMode ? '#fff' : '#000'},
+                      softbreak: {color: isDarkMode ? '#fff' : '#000'},
+                      pre: {color: isDarkMode ? '#fff' : '#000'},
+                      inline: {color: isDarkMode ? '#fff' : '#000'},
+                      span: {color: isDarkMode ? '#fff' : '#000'},
+                    }}>
+                    {reply.description}
+                  </Markdown>
+                </Text>
+              ))}
+
               <Text
                 style={[
                   styles.cardInfo,

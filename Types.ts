@@ -138,3 +138,19 @@ export interface TicketResponse {
   pages: number;
   results: number;
 }
+
+interface TicketReply {
+  created: string;
+  created_by: string;
+  description: string;
+  from_linode: boolean;
+  gravatar_id: string;
+  id: number;
+}
+
+export interface TicketReplyResponse {
+  data: TicketReply[];
+  page: number;
+  pages: number;
+  results: number;
+}
